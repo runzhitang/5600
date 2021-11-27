@@ -1,0 +1,57 @@
+pip install -U imbalanced-learn
+pip freeze | grep imbalanced-learn
+
+/* import data
+import pandas as pd
+from pyspark.sql import SparkSession
+from pyspark import SparkContext 
+from pyspark.sql import SQLContext 
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import model_selection
+from sklearn import tree
+from sklearn import metrics
+from imblearn.over_sampling import SMOTE
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.appName('myproj').getOrCreate()
+data = spark.read.csv('/FileStore/tables/train_data_011.csv',sep='|',inferSchema=True,header=True)
+data.printSchema()
+
+/* drop unexplained data
+data=data.drop('communication_onlinerate')
+data.show()
+
+/* find null value
+from pyspark.sql.functions import *
+from pyspark.sql.functions import when, count, col
+na_report=data.select([count(when(isnull(c), c)).alias(c) for c in df.columns])
+print("Number of Rows: ",df.count() ,"   Number of Columns: ", len(df.columns))
+na_report.show()
+
+/* unbalanced data processing
+df1=data.toPandas()
+import seaborn as sns
+sampledf = df1.sample(frac=1,random_state=4)
+label_df = sampledf.loc[sampledf['label'] == 1]
+non_label_df=sampledf.loc[sampledf['label']== 0].sample(n=50000,random_state=42)
+df2 = pd.concat([label_df, non_label_df])
+plt.figure(figsize=(8, 8))
+sns.countplot('label', data=df2)
+plt.title('Balanced Classes')
+plt.show()
+
+/* basic statistics
+from pyspark import SparkContext 
+sc = SparkContext.getOrCreate()
+sqlContext = SQLContext(sc)
+df3 = sqlContext.createDataFrame(df2)
+df3.select('age',  'city_rank',  'device_price', 
+           'career','gender', 'net_type', 'communication_avgonline_30d' ,'app_score','label').describe().show()
+df3.select('uid',  'city',  'device_size', 
+           'creat_type_cd','tags', 'app_first_class', 'membership_life_duration' ,'consume_purchase','his_app_size').describe().show()
+
+/* visual parts
+df3.registerTempTable("dataclean")
+display(sqlContext.sql("select * from dataclean"))
